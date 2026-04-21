@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model User {
+  id           Int     @id @default(autoincrement())
+  email        String  @unique
+  name         String?
+  surname      String?
+  phone        String?
+  passwordHash String
+  role         Role    @default(USER)
+
+  materials     Material[]
+  refreshTokens RefreshToken[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RefreshToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+enum MaterialType {
+  PDF
+  DOC
+  XLS
+  VIDEO
+  IMAGE
+  LINK
+}
+
+model Material {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+
+  type        MaterialType
+  url         String
+
+  subjectId   Int
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  authorId    Int
+  author      User     @relation(fields: [authorId], references: [id])
+
+  isPublished Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Subject {
+  id          Int        @id @default(autoincrement())
+  title       String     @unique
+  description String?
+
+  materials   Material[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
