@@ -10,11 +10,11 @@ const {
 const authMiddleware = require("../middleware/auth.middleware")
 const roleMiddleware = require("../middleware/role.middleware")
 
-// 📚 все могут смотреть предметы
+//  все могут смотреть предметы
 router.get("/", getAllSubjects)
 router.get("/:id", getSubjectById)
 
-// 🔐 только ADMIN создаёт предмет
+//  только ADMIN создаёт предмет
 router.post(
     "/",
     authMiddleware,

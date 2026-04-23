@@ -1,6 +1,8 @@
 const prisma = require("../../db/prismaClient")
 const fs = require("fs")
 const path = require("path")
+const uploadToSupabase = require("../../utils/supabase/uploadToSupabase")
+const deleteFromSupabase = require("../../utils/supabase/deleteToSupabase")
 
 const createMaterial = async (req, res) => {
     try {
@@ -13,7 +15,7 @@ const createMaterial = async (req, res) => {
         let fileUrl = null
 
         if (req.file) {
-            fileUrl = `/uploads/${req.file.filename}`
+            fileUrl = await uploadToSupabase(req.file)
         }
 
         const material = await prisma.material.create({
@@ -88,15 +90,7 @@ const deleteMaterial = async (req, res) => {
         }
 
         if (material.url) {
-            const filePath = path.join(__dirname, "../../", material.url)
-
-            try {
-                if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath)
-                }
-            } catch (fileErr) {
-                console.log("Ошибка удаления файла:", fileErr)
-            }
+            await deleteFromSupabase(material.url)
         }
 
         await prisma.material.delete({
