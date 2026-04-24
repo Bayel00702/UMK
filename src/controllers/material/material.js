@@ -2,7 +2,7 @@ const prisma = require("../../db/prismaClient")
 const fs = require("fs")
 const path = require("path")
 const uploadToSupabase = require("../../utils/supabase/uploadToSupabase")
-const deleteFromSupabase = require("../../utils/supabase/deleteToSupabase")
+const deleteFromSupabase = require("../../utils/supabase/deleteToSupabase.js")
 
 const createMaterial = async (req, res) => {
     try {
