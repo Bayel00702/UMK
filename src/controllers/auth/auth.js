@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken")
 
 const registerUser = async (req, res) => {
     try {
-        const { email, password, name } = req.body
+        const { email, password, name, surname, phone } = req.body
 
         if (!email || !password) {
             return res.status(400).json({ message: "Email и пароль обязательны" })
@@ -25,6 +25,8 @@ const registerUser = async (req, res) => {
             data: {
                 email,
                 name,
+                surname,
+                phone,
                 passwordHash
             }
         })

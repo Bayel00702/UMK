@@ -44,6 +44,7 @@ enum MaterialType {
   PDF
   DOC
   XLS
+  PRESENTATION
   VIDEO
   IMAGE
   LINK
