@@ -1,11 +1,12 @@
-const supabase = require("./supabase")
+const { createClient } = require("@supabase/supabase-js")
 
-const deleteFromSupabase = async (fileUrl) => {
-    const fileName = fileUrl.split("/materials/")[1]
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_KEY
 
-    await supabase.storage
-        .from("materials")
-        .remove([fileName])
+if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Missing Supabase ENV variables")
 }
 
-module.exports = deleteFromSupabase
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+module.exports = supabase
