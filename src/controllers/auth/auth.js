@@ -57,10 +57,21 @@ const loginUser = async (req, res) => {
         }
 
         const user = await prisma.user.findUnique({ where: { email } })
-        if (!user) return res.status(400).json({ message: "Неверные данные" })
+
+        if (!user || !user.passwordHash) {
+            return res.status(400).json({ message: "Неверные данные" })
+        }
 
         const isValid = await bcrypt.compare(password, user.passwordHash)
-        if (!isValid) return res.status(400).json({ message: "Неверные данные" })
+
+        if (!isValid) {
+            return res.status(400).json({ message: "Неверные данные" })
+        }
+
+        if (!process.env.JWT_SECRET) {
+            console.error("JWT_SECRET is missing")
+            return res.status(500).json({ message: "Server config error" })
+        }
 
         const accessToken = jwt.sign(
             { sub: user.id, role: user.role },
@@ -81,13 +92,10 @@ const loginUser = async (req, res) => {
             }
         })
 
-        res.json({
-            accessToken,
-            refreshToken
-        })
+        res.json({ accessToken, refreshToken })
 
     } catch (err) {
-        console.log(err)
+        console.log("LOGIN ERROR:", err)
         res.status(500).json({ message: "Ошибка входа" })
     }
 }
