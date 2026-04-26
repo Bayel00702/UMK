@@ -12,27 +12,34 @@ const createMaterial = async (req, res) => {
             type,
             category,
             subcategory,
-            subjectId
+            subjectId,
+            url
         } = req.body
 
         if (!title || !type || !category || !subjectId) {
-            return res.status(400).json({ message: "Заполните все поля" })
+            return res.status(400).json({
+                message: "Заполните обязательные поля"
+            })
         }
 
         let fileUrl = null
         let fileName = null
 
         if (req.file) {
-            fileUrl = await uploadToSupabase(req.file)
-            fileName = req.file.originalname
+            const uploadResult = await uploadToSupabase(req.file)
+
+            fileUrl = uploadResult.url
+            fileName = uploadResult.fileName
         }
-        else if (type === "LINK" && url) {
+
+        if (type === "LINK") {
+            if (!url) {
+                return res.status(400).json({
+                    message: "Для LINK нужен url"
+                })
+            }
+
             fileUrl = url
-        }
-        else {
-            return res.status(400).json({
-                message: "Нужен файл или ссылка"
-            })
         }
 
         const material = await prisma.material.create({
@@ -49,11 +56,13 @@ const createMaterial = async (req, res) => {
             }
         })
 
-        res.json(material)
+        res.status(201).json(material)
 
     } catch (err) {
         console.log(err)
-        res.status(500).json({ message: "Ошибка загрузки материала" })
+        res.status(500).json({
+            message: "Ошибка загрузки материала"
+        })
     }
 }
 
@@ -127,9 +136,41 @@ const deleteMaterial = async (req, res) => {
     }
 }
 
+const downloadMaterial = async (req, res) => {
+    try {
+        const { id } = req.params
+
+        const material = await prisma.material.findUnique({
+            where: {
+                id: Number(id)
+            }
+        })
+
+        if (!material) {
+            return res.status(404).json({
+                message: "Материал не найден"
+            })
+        }
+
+        return res.redirect(
+            `${material.url}?download=${encodeURIComponent(
+                material.fileName || material.title
+            )}`
+        )
+
+    } catch (err) {
+        console.log(err)
+
+        res.status(500).json({
+            message: "Ошибка скачивания"
+        })
+    }
+}
+
 module.exports = {
     createMaterial,
     getAllMaterials,
     getMaterialsBySubject,
-    deleteMaterial
+    deleteMaterial,
+    downloadMaterial
 }

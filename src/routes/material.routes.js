@@ -6,7 +6,8 @@ const {
     createMaterial,
     getAllMaterials,
     getMaterialsBySubject,
-    deleteMaterial
+    deleteMaterial,
+    downloadMaterial
 } = require("../controllers/material/material")
 
 const authMiddleware = require("../middleware/auth.middleware")
@@ -29,6 +30,11 @@ router.post(
     createMaterialValidation,
     handleValidationErrors,
     createMaterial
+)
+
+router.get(
+    "/download/:id",
+    downloadMaterial
 )
 
 router.delete(
