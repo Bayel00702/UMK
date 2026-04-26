@@ -1,50 +1,306 @@
 const prisma = require("../../db/prismaClient")
 
-const submitTest = async (req, res) => {
-    try {
-        const userId = req.user.sub
-        const { answers, subjectId } = req.body
 
-        if (!answers || !answers.length) {
-            return res.status(400).json({ message: "Нет ответов" })
+// ADMIN - создание вопроса
+const createQuestion = async (req, res) => {
+    try {
+        const {
+            text,
+            subjectId,
+            answers
+        } = req.body
+
+        if (
+            !text ||
+            !subjectId ||
+            !answers ||
+            answers.length < 2
+        ) {
+            return res.status(400).json({
+                message:
+                    "Заполните все поля"
+            })
         }
 
-        let correct = 0
-
-        for (const item of answers) {
-            const answer = await prisma.answer.findUnique({
-                where: { id: item.answerId }
+        const question =
+            await prisma.question.create({
+                data: {
+                    text,
+                    subjectId: Number(
+                        subjectId
+                    ),
+                    answers: {
+                        create: answers.map(
+                            answer => ({
+                                text: answer.text,
+                                isCorrect:
+                                answer.isCorrect
+                            })
+                        )
+                    }
+                },
+                include: {
+                    answers: true
+                }
             })
 
-            if (answer && answer.isCorrect) {
-                correct++
-            }
-        }
+        res.status(201).json(
+            question
+        )
 
-        const total = answers.length
-        const percent = (correct / total) * 100
+    } catch (err) {
+        console.log(err)
 
-        const result = await prisma.testResult.create({
-            data: {
-                userId,
-                subjectId,
-                score: correct,
-                total,
-                percent
-            }
+        res.status(500).json({
+            message:
+                "Ошибка создания вопроса"
         })
+    }
+}
 
-        return res.json({
-            correct,
-            total,
-            percent,
-            resultId: result.id
+
+
+// USER - получить тесты по предмету
+const getQuestionsBySubject =
+    async (req, res) => {
+        try {
+            const { subjectId } =
+                req.params
+
+            const questions =
+                await prisma.question.findMany(
+                    {
+                        where: {
+                            subjectId:
+                                Number(
+                                    subjectId
+                                )
+                        },
+                        include: {
+                            answers: {
+                                select: {
+                                    id: true,
+                                    text: true
+                                }
+                            }
+                        }
+                    }
+                )
+
+            res.json(questions)
+
+        } catch (err) {
+            console.log(err)
+
+            res.status(500).json({
+                message:
+                    "Ошибка получения тестов"
+            })
+        }
+    }
+
+
+
+// USER - отправка теста
+const submitTest = async (
+    req,
+    res
+) => {
+    try {
+        const {
+            subjectId,
+            answers
+        } = req.body
+
+        const questions =
+            await prisma.question.findMany({
+                where: {
+                    subjectId:
+                        Number(
+                            subjectId
+                        )
+                },
+                include: {
+                    answers: true
+                }
+            })
+
+        let score = 0
+
+        questions.forEach(
+            question => {
+                const correctAnswer =
+                    question.answers.find(
+                        answer =>
+                            answer.isCorrect
+                    )
+
+                if (
+                    answers[
+                        question.id
+                        ] ===
+                    correctAnswer?.id
+                ) {
+                    score++
+                }
+            }
+        )
+
+        const total =
+            questions.length
+
+        const percent =
+            total > 0
+                ? (
+                    (score /
+                        total) *
+                    100
+                ).toFixed(2)
+                : 0
+
+        const result =
+            await prisma.testResult.create(
+                {
+                    data: {
+                        userId:
+                        req.user.sub,
+                        subjectId:
+                            Number(
+                                subjectId
+                            ),
+                        score,
+                        total,
+                        percent:
+                            Number(
+                                percent
+                            )
+                    }
+                }
+            )
+
+        res.json({
+            message:
+                "Тест завершен",
+            result
         })
 
     } catch (err) {
         console.log(err)
-        res.status(500).json({ message: "Ошибка теста" })
+
+        res.status(500).json({
+            message:
+                "Ошибка отправки теста"
+        })
     }
 }
 
-module.exports = { submitTest }
+
+
+// USER - история результатов
+const getUserResults =
+    async (req, res) => {
+        try {
+            const results =
+                await prisma.testResult.findMany(
+                    {
+                        where: {
+                            userId:
+                            req.user.sub
+                        },
+                        include: {
+                            subject: true
+                        },
+                        orderBy: {
+                            createdAt:
+                                "desc"
+                        }
+                    }
+                )
+
+            res.json(results)
+
+        } catch (err) {
+            console.log(err)
+
+            res.status(500).json({
+                message:
+                    "Ошибка получения результатов"
+            })
+        }
+    }
+
+
+
+// ADMIN - аналитика успеваемости
+const getAnalytics =
+    async (req, res) => {
+        try {
+            const results =
+                await prisma.testResult.findMany(
+                    {
+                        include: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    email: true
+                                }
+                            },
+                            subject: {
+                                select: {
+                                    id: true,
+                                    title: true
+                                }
+                            }
+                        },
+                        orderBy: {
+                            createdAt:
+                                "desc"
+                        }
+                    }
+                )
+
+            const totalTests =
+                results.length
+
+            const averageScore =
+                totalTests > 0
+                    ? (
+                        results.reduce(
+                            (
+                                acc,
+                                item
+                            ) =>
+                                acc +
+                                item.percent,
+                            0
+                        ) /
+                        totalTests
+                    ).toFixed(2)
+                    : 0
+
+            res.json({
+                totalTests,
+                averageScore,
+                results
+            })
+
+        } catch (err) {
+            console.log(err)
+
+            res.status(500).json({
+                message:
+                    "Ошибка аналитики"
+            })
+        }
+    }
+
+
+
+module.exports = {
+    createQuestion,
+    getQuestionsBySubject,
+    submitTest,
+    getUserResults,
+    getAnalytics
+}
