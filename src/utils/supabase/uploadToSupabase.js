@@ -1,16 +1,26 @@
+const path = require("path")
 const supabase = require("./supabase")
 
 const uploadToSupabase = async (file) => {
-    const safeName = file.originalname
-        .replace(/[^a-zA-Z0-9.]/g, "_")
+    const originalName = Buffer.from(
+        file.originalname,
+        "latin1"
+    ).toString("utf8")
 
-    const fileName = Date.now() + "-" + safeName
+    const ext = path.extname(originalName)
+
+    const safeFileName =
+        Date.now() + ext
 
     const { error } = await supabase.storage
         .from("materials")
-        .upload(fileName, file.buffer, {
-            contentType: file.mimetype
-        })
+        .upload(
+            safeFileName,
+            file.buffer,
+            {
+                contentType: file.mimetype
+            }
+        )
 
     if (error) {
         throw error
@@ -18,9 +28,12 @@ const uploadToSupabase = async (file) => {
 
     const { data } = supabase.storage
         .from("materials")
-        .getPublicUrl(fileName)
+        .getPublicUrl(safeFileName)
 
-    return data.publicUrl
+    return {
+        url: data.publicUrl,
+        fileName: originalName
+    }
 }
 
 module.exports = uploadToSupabase

@@ -29,7 +29,11 @@ const createMaterial = async (req, res) => {
             const uploadResult = await uploadToSupabase(req.file)
 
             fileUrl = uploadResult.url
-            fileName = uploadResult.fileName
+
+            fileName = Buffer.from(
+                req.file.originalname,
+                "latin1"
+            ).toString("utf8")
         }
 
         if (type === "LINK") {
