@@ -11,8 +11,8 @@ const createMaterial = async (req, res) => {
             description,
             type,
             category,
-            subjectId,
-            url
+            subcategory,
+            subjectId
         } = req.body
 
         if (!title || !type || !category || !subjectId) {
@@ -41,6 +41,7 @@ const createMaterial = async (req, res) => {
                 description,
                 type,
                 category,
+                subcategory,
                 url: fileUrl,
                 fileName,
                 subjectId: Number(subjectId),

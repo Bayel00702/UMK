@@ -40,6 +40,10 @@ const createMaterialValidation = [
             "SYLLABUS"
         ])
         .withMessage("Неверная категория"),
+    body("subcategory")
+        .optional()
+        .isString()
+        .withMessage("Подкатегория должна быть строкой"),
     body("url")
         .if(body("type").equals("LINK"))
         .notEmpty()
