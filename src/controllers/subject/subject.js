@@ -75,8 +75,54 @@ const getSubjectById = async (req, res) => {
     }
 }
 
+const deleteSubject = async (req, res) => {
+    try {
+        const { id } = req.params
+
+        const subject =
+            await prisma.subject.findUnique({
+                where: {
+                    id: Number(id)
+                }
+            })
+
+        if (!subject) {
+            return res.status(404).json({
+                message:
+                    "Предмет не найден"
+            })
+        }
+
+        await prisma.material.deleteMany({
+            where: {
+                subjectId: Number(id)
+            }
+        })
+
+        await prisma.subject.delete({
+            where: {
+                id: Number(id)
+            }
+        })
+
+        res.json({
+            message:
+                "Предмет удален"
+        })
+
+    } catch (err) {
+        console.log(err)
+
+        res.status(500).json({
+            message:
+                "Ошибка удаления предмета"
+        })
+    }
+}
+
 module.exports = {
     createSubject,
     getAllSubjects,
-    getSubjectById
+    getSubjectById,
+    deleteSubject,
 }

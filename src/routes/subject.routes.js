@@ -4,7 +4,8 @@ const router = express.Router()
 const {
     createSubject,
     getAllSubjects,
-    getSubjectById
+    getSubjectById,
+    deleteSubject,
 } = require("../controllers/subject/subject")
 
 const authMiddleware = require("../middleware/auth.middleware")
@@ -20,6 +21,13 @@ router.post(
     authMiddleware,
     roleMiddleware(["ADMIN"]),
     createSubject
+)
+
+router.delete(
+    "/:id",
+    authMiddleware,
+    roleMiddleware(["ADMIN"]),
+    deleteSubject
 )
 
 module.exports = router

@@ -70,6 +70,79 @@ const createMaterial = async (req, res) => {
     }
 }
 
+const updateMaterial = async (req, res) => {
+    try {
+        const { id } = req.params
+
+        const {
+            title,
+            description
+        } = req.body
+
+        const material =
+            await prisma.material.findUnique({
+                where: {
+                    id: Number(id)
+                }
+            })
+
+        if (!material) {
+            return res.status(404).json({
+                message:
+                    "Материал не найден"
+            })
+        }
+
+        let updatedUrl = material.url
+        let updatedFileName =
+            material.fileName
+
+        if (req.file) {
+            const uploadResult =
+                await uploadToSupabase(
+                    req.file
+                )
+
+            updatedUrl =
+                uploadResult.url
+
+            updatedFileName =
+                Buffer.from(
+                    req.file.originalname,
+                    "latin1"
+                ).toString("utf8")
+        }
+
+        const updatedMaterial =
+            await prisma.material.update({
+                where: {
+                    id: Number(id)
+                },
+                data: {
+                    title:
+                        title ||
+                        material.title,
+                    description:
+                        description ||
+                        material.description,
+                    url: updatedUrl,
+                    fileName:
+                    updatedFileName
+                }
+            })
+
+        res.json(updatedMaterial)
+
+    } catch (err) {
+        console.log(err)
+
+        res.status(500).json({
+            message:
+                "Ошибка обновления материала"
+        })
+    }
+}
+
 const getAllMaterials = async (req, res) => {
     try {
         const materials = await prisma.material.findMany({
@@ -176,5 +249,6 @@ module.exports = {
     getAllMaterials,
     getMaterialsBySubject,
     deleteMaterial,
-    downloadMaterial
+    downloadMaterial,
+    updateMaterial
 }

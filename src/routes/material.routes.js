@@ -7,7 +7,8 @@ const {
     getAllMaterials,
     getMaterialsBySubject,
     deleteMaterial,
-    downloadMaterial
+    downloadMaterial,
+    updateMaterial
 } = require("../controllers/material/material")
 
 const authMiddleware = require("../middleware/auth.middleware")
@@ -42,6 +43,14 @@ router.delete(
     authMiddleware,
     roleMiddleware(["ADMIN"]),
     deleteMaterial
+)
+
+router.put(
+    "/:id",
+    authMiddleware,
+    roleMiddleware(["ADMIN"]),
+    upload.single("file"),
+    updateMaterial
 )
 
 module.exports = router
