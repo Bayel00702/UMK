@@ -4,6 +4,8 @@ const prisma = require("../db/prismaClient")
 const { hashToken, generateRefreshToken } = require("../utils/refresh")
 const { registerUser, loginUser } = require("../controllers/auth/auth")
 const jwt = require("jsonwebtoken")
+const { loginUserValidation, registerUserValidation } = require("../validation/validation.user")
+const { handleValidationErrors } = require("../validation/handleValidationErrors")
 
 
 const refresh = async (req, res) => {
@@ -69,8 +71,8 @@ const refresh = async (req, res) => {
     }
 }
 
-router.post("/register", registerUser)
-router.post("/login", loginUser)
+router.post("/register", registerUser, registerUserValidation, handleValidationErrors)
+router.post("/login", loginUser, loginUserValidation, handleValidationErrors)
 
 // refresh endpoint
 router.post("/refresh", refresh)

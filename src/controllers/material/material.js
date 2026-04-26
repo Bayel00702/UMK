@@ -6,16 +6,33 @@ const deleteFromSupabase = require("../../utils/supabase/deleteToSupabase.js")
 
 const createMaterial = async (req, res) => {
     try {
-        const { title, description, type, subjectId } = req.body
+        const {
+            title,
+            description,
+            type,
+            category,
+            subjectId,
+            url
+        } = req.body
 
-        if (!title || !type || !subjectId) {
-            return res.status(400).json({ message: "Заполните поля" })
+        if (!title || !type || !category || !subjectId) {
+            return res.status(400).json({ message: "Заполните все поля" })
         }
 
         let fileUrl = null
+        let fileName = null
 
         if (req.file) {
             fileUrl = await uploadToSupabase(req.file)
+            fileName = req.file.originalname
+        }
+        else if (type === "LINK" && url) {
+            fileUrl = url
+        }
+        else {
+            return res.status(400).json({
+                message: "Нужен файл или ссылка"
+            })
         }
 
         const material = await prisma.material.create({
@@ -23,7 +40,9 @@ const createMaterial = async (req, res) => {
                 title,
                 description,
                 type,
+                category,
                 url: fileUrl,
+                fileName,
                 subjectId: Number(subjectId),
                 authorId: req.user.sub
             }
@@ -60,11 +79,13 @@ const getAllMaterials = async (req, res) => {
 const getMaterialsBySubject = async (req, res) => {
     try {
         const { subjectId } = req.params
+        const { category } = req.query
 
         const materials = await prisma.material.findMany({
             where: {
                 subjectId: Number(subjectId),
-                isPublished: true
+                isPublished: true,
+                ...(category && { category })
             },
             orderBy: { createdAt: "desc" }
         })

@@ -1,12 +1,5 @@
-const { body, validationResult } = require("express-validator");
+const { body } = require("express-validator");
 
-const handleValidationErrors = (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-    next();
-};
 
 const registerUserValidation = [
     body("email", "Неверный формат почты").isEmail().normalizeEmail(),
@@ -41,34 +34,7 @@ const loginUserValidation = [
     body("password", "Пароль должен быть минимум 8 символов").isLength({ min: 8 }),
 ];
 
-const materialValidation = [
-    body("title", "Название обязательно")
-        .isString()
-        .isLength({ min: 3, max: 100 }),
-
-    body("description")
-        .optional()
-        .isString()
-        .isLength({ max: 500 }),
-
-    body("type", "Тип файла обязателен")
-        .isIn(["PDF", "DOC", "XLS", "VIDEO", "IMAGE", "LINK"]),
-
-    body("url", "Ссылка обязательна")
-        .isURL(),
-
-    body("subject")
-        .optional()
-        .isString(),
-
-    body("isPublished")
-        .optional()
-        .isBoolean(),
-];
-
 module.exports = {
     registerUserValidation,
     loginUserValidation,
-    handleValidationErrors,
-    materialValidation
 };
