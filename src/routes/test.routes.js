@@ -9,7 +9,8 @@ const {
     getQuestionsBySubject,
     submitTest,
     getUserResults,
-    getAnalytics
+    getAnalytics,
+    deleteQuestion,
 } = require("../controllers/test/test")
 
 router.post(
@@ -42,6 +43,13 @@ router.get(
     authMiddleware,
     roleMiddleware(["ADMIN"]),
     getAnalytics
+)
+
+router.delete(
+    "/:id",
+    authMiddleware,
+    roleMiddleware(["ADMIN"]),
+    deleteQuestion
 )
 
 module.exports = router

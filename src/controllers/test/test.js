@@ -334,11 +334,32 @@ const getAnalytics =
     }
 
 
+const deleteQuestion = async (req, res) => {
+    try {
+        await prisma.question.delete({
+            where: {
+                id: Number(req.params.id)
+            }
+        })
+
+        res.json({
+            message: "Удалено"
+        })
+
+    } catch (error) {
+        res.status(500).json({
+            message: "Ошибка удаления"
+        })
+    }
+}
+
+
 
 module.exports = {
     createQuestion,
     getQuestionsBySubject,
     submitTest,
     getUserResults,
-    getAnalytics
+    getAnalytics,
+    deleteQuestion,
 }
