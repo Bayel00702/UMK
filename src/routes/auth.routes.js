@@ -78,7 +78,7 @@ router.post("/login", loginUser, loginUserValidation, handleValidationErrors)
 // refresh endpoint
 router.post("/refresh", refresh)
 
-router.get('/me', getMe)
+router.get('/me',authMiddleware, getMe)
 router.get(
     "/users",
     authMiddleware,

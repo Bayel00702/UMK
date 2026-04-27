@@ -102,7 +102,7 @@ const getMe = async (req, res) => {
     try {
         const user = await prisma.user.findUnique({
             where: {
-                id: req.user.id
+                id: req.user.sub,
             },
             select: {
                 id: true,
