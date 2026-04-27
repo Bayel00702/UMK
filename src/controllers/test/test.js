@@ -6,12 +6,14 @@ const createQuestion = async (req, res) => {
     try {
         const {
             text,
+            testTitle,
             subjectId,
             answers
         } = req.body
 
         if (
             !text ||
+            !testTitle ||
             !subjectId ||
             !answers ||
             answers.length < 2
@@ -24,7 +26,8 @@ const createQuestion = async (req, res) => {
 
         const hasCorrectAnswer =
             answers.some(
-                answer => answer.isCorrect
+                answer =>
+                    answer.isCorrect
             )
 
         const hasEmptyAnswers =
@@ -52,6 +55,7 @@ const createQuestion = async (req, res) => {
             await prisma.question.create({
                 data: {
                     text,
+                    testTitle,
                     subjectId: Number(
                         subjectId
                     ),
