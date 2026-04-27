@@ -98,4 +98,56 @@ const loginUser = async (req, res) => {
     }
 }
 
-module.exports = { registerUser, loginUser }
+const getMe = async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                createdAt: true
+            }
+        })
+
+        if (!user) {
+            return res.status(404).json({
+                message: "Пользователь не найден"
+            })
+        }
+
+        res.json(user)
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        })
+    }
+}
+
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await prisma.user.findMany({
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                createdAt: true
+            },
+            orderBy: {
+                createdAt: "desc"
+            }
+        })
+
+        res.json(users)
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        })
+    }
+}
+
+module.exports = { registerUser, loginUser, getMe, getAllUsers }

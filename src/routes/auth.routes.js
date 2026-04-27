@@ -2,10 +2,11 @@ const express = require("express")
 const router = express.Router()
 const prisma = require("../db/prismaClient")
 const { hashToken, generateRefreshToken } = require("../utils/refresh")
-const { registerUser, loginUser } = require("../controllers/auth/auth")
+const { registerUser, loginUser, getMe, getAllUsers } = require("../controllers/auth/auth")
 const jwt = require("jsonwebtoken")
 const { loginUserValidation, registerUserValidation } = require("../validation/validation.user")
 const { handleValidationErrors } = require("../validation/handleValidationErrors")
+const authMiddleware = require("../middleware/auth.middleware")
 
 
 const refresh = async (req, res) => {
@@ -76,5 +77,12 @@ router.post("/login", loginUser, loginUserValidation, handleValidationErrors)
 
 // refresh endpoint
 router.post("/refresh", refresh)
+
+router.get('/me', getMe)
+router.get(
+    "/users",
+    authMiddleware,
+    getAllUsers
+)
 
 module.exports = router
