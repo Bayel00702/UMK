@@ -22,6 +22,32 @@ const createQuestion = async (req, res) => {
             })
         }
 
+        const hasCorrectAnswer =
+            answers.some(
+                answer => answer.isCorrect
+            )
+
+        const hasEmptyAnswers =
+            answers.some(
+                answer =>
+                    !answer.text ||
+                    answer.text.trim() === ""
+            )
+
+        if (hasEmptyAnswers) {
+            return res.status(400).json({
+                message:
+                    "Все варианты ответа должны быть заполнены"
+            })
+        }
+
+        if (!hasCorrectAnswer) {
+            return res.status(400).json({
+                message:
+                    "Укажите правильный ответ"
+            })
+        }
+
         const question =
             await prisma.question.create({
                 data: {
@@ -125,26 +151,35 @@ const submitTest = async (
                 }
             })
 
+        if (!questions.length) {
+            return res.status(400).json({
+                message:
+                    "Для этого предмета нет тестов"
+            })
+        }
+
         let score = 0
 
-        questions.forEach(
-            question => {
-                const correctAnswer =
-                    question.answers.find(
-                        answer =>
-                            answer.isCorrect
-                    )
+        questions.forEach(question => {
+            const correctAnswer =
+                question.answers.find(
+                    answer => answer.isCorrect
+                )
 
-                if (
-                    answers[
-                        question.id
-                        ] ===
-                    correctAnswer?.id
-                ) {
-                    score++
-                }
+            const userAnswer =
+                answers.find(
+                    item =>
+                        item.questionId === question.id
+                )
+
+            if (
+                userAnswer &&
+                userAnswer.answerId ===
+                correctAnswer?.id
+            ) {
+                score++
             }
-        )
+        })
 
         const total =
             questions.length
@@ -260,11 +295,10 @@ const getAnalytics =
                     }
                 )
 
-            const totalTests =
-                results.length
+            const totalAttempts = results.length
 
             const averageScore =
-                totalTests > 0
+                totalAttempts > 0
                     ? (
                         results.reduce(
                             (
@@ -275,12 +309,12 @@ const getAnalytics =
                                 item.percent,
                             0
                         ) /
-                        totalTests
+                        totalAttempts
                     ).toFixed(2)
                     : 0
 
             res.json({
-                totalTests,
+                totalAttempts,
                 averageScore,
                 results
             })
