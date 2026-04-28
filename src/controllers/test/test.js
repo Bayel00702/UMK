@@ -139,16 +139,15 @@ const submitTest = async (
     try {
         const {
             subjectId,
+            testTitle,
             answers
         } = req.body
 
         const questions =
             await prisma.question.findMany({
                 where: {
-                    subjectId:
-                        Number(
-                            subjectId
-                        )
+                    subjectId: Number(subjectId),
+                    testTitle: testTitle
                 },
                 include: {
                     answers: true
@@ -197,9 +196,14 @@ const submitTest = async (
                 ).toFixed(2)
                 : 0
 
-        const testTitle =
-            questions[0]?.testTitle ||
-            "Без названия"
+
+        await prisma.testResult.deleteMany({
+            where: {
+                userId: req.user.sub,
+                subjectId: Number(subjectId),
+                testTitle: testTitle
+            }
+        })
 
         const result =
             await prisma.testResult.create({
