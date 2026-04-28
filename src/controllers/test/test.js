@@ -197,25 +197,21 @@ const submitTest = async (
                 ).toFixed(2)
                 : 0
 
+        const testTitle =
+            questions[0]?.testTitle ||
+            "Без названия"
+
         const result =
-            await prisma.testResult.create(
-                {
-                    data: {
-                        userId:
-                        req.user.sub,
-                        subjectId:
-                            Number(
-                                subjectId
-                            ),
-                        score,
-                        total,
-                        percent:
-                            Number(
-                                percent
-                            )
-                    }
+            await prisma.testResult.create({
+                data: {
+                    userId: req.user.sub,
+                    subjectId: Number(subjectId),
+                    testTitle,
+                    score,
+                    total,
+                    percent: Number(percent)
                 }
-            )
+            })
 
         res.json({
             message:

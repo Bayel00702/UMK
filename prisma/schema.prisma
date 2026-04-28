@@ -23,7 +23,7 @@ model User {
   refreshTokens RefreshToken[]
 
   materialProgress MaterialProgress[]
-  testResults TestResult[]
+  testResults      TestResult[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -84,7 +84,6 @@ model Material {
 
   progress MaterialProgress[]
 
-
   isPublished Boolean @default(true)
 
   createdAt DateTime @default(now())
@@ -120,8 +119,8 @@ model Topic {
 }
 
 model Question {
-  id   Int    @id @default(autoincrement())
-  text String
+  id        Int     @id @default(autoincrement())
+  text      String
   testTitle String?
 
   subjectId Int
@@ -150,6 +149,8 @@ model TestResult {
   subjectId Int
   subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
+  testTitle String? // ДОБАВЬ ЭТО
+
   score   Int
   total   Int
   percent Float
@@ -161,12 +162,12 @@ model MaterialProgress {
   id Int @id @default(autoincrement())
 
   userId Int
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   materialId Int
-  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
 
-  progress Int @default(0)
+  progress  Int @default(0)
   timeSpent Int @default(0)
 
   completed Boolean @default(false)
