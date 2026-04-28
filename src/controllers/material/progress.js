@@ -1,9 +1,11 @@
-
+const prisma = require("../../db/prismaClient")
 
 
 const markMaterialProgress = async (req, res) => {
     try {
-        const userId = Number(req.user?.id)
+        const userId = Number(
+            req.user?.sub
+        )
         const materialId = Number(req.params.id)
 
         if (!userId) {
@@ -65,7 +67,9 @@ const markMaterialProgress = async (req, res) => {
 
 const getProfileStats = async (req, res) => {
     try {
-        const userId = Number(req.user.id)
+        const userId = Number(
+            req.user.sub
+        )
 
         const totalMaterials =
             await prisma.material.count()
@@ -147,6 +151,7 @@ const getProfileStats = async (req, res) => {
         })
     }
 }
+
 module.exports ={
     markMaterialProgress,
     getProfileStats,
