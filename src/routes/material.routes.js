@@ -11,7 +11,7 @@ const {
     updateMaterial
 } = require("../controllers/material/material")
 
-const {markMaterialProgress, getProfileStats} = require("../controllers/material/progress")
+const {markMaterialProgress, getProfileStats, getMaterialsProgress} = require("../controllers/material/progress")
 
 const authMiddleware = require("../middleware/auth.middleware")
 const roleMiddleware = require("../middleware/role.middleware")
@@ -65,6 +65,13 @@ router.get(
     "/profile/stats",
     authMiddleware,
     getProfileStats
+)
+
+router.get(
+    "/progress/users",
+    authMiddleware,
+    roleMiddleware(["ADMIN"]),
+    getMaterialsProgress
 )
 
 module.exports = router

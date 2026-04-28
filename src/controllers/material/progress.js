@@ -152,7 +152,38 @@ const getProfileStats = async (req, res) => {
     }
 }
 
+const getMaterialsProgress = async (req, res) => {
+    try {
+        const materials = await prisma.material.findMany({
+            include: {
+                progress: true
+            }
+        })
+
+        const formatted = materials.map(material => ({
+            materialId: material.id,
+            title: material.title,
+            views: material.progress.length,
+            uniqueUsers: new Set(
+                material.progress.map(p => p.userId)
+            ).size
+        }))
+
+        res.json({
+            progress: formatted
+        })
+
+    } catch (error) {
+        console.log("MATERIAL ANALYTICS ERROR:", error)
+
+        res.status(500).json({
+            message: "Ошибка статистики материалов"
+        })
+    }
+}
+
 module.exports ={
     markMaterialProgress,
     getProfileStats,
+    getMaterialsProgress
 }
