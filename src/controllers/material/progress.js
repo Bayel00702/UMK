@@ -63,12 +63,9 @@ const markMaterialProgress = async (req, res) => {
     }
 }
 
-const getProfileStats = async (
-    req,
-    res
-) => {
+const getProfileStats = async (req, res) => {
     try {
-        const userId = req.user.id
+        const userId = Number(req.user.id)
 
         const totalMaterials =
             await prisma.material.count()
@@ -83,20 +80,24 @@ const getProfileStats = async (
 
         const tests =
             await prisma.testResult.findMany({
-                where: { userId }
+                where: {
+                    userId
+                }
             })
 
-        const avgScore =
-            tests.length > 0
-                ? tests.reduce(
-                (acc, item) =>
-                    acc +
-                    item.percent,
-                0
-            ) / tests.length
-                : 0
+        let avgScore = 0
 
-        const totalTime =
+        if (tests.length > 0) {
+            avgScore = Math.round(
+                tests.reduce(
+                    (acc, item) =>
+                        acc + item.percent,
+                    0
+                ) / tests.length
+            )
+        }
+
+        const totalTimeResult =
             await prisma.materialProgress.aggregate({
                 where: {
                     userId
@@ -106,9 +107,15 @@ const getProfileStats = async (
                 }
             })
 
+        const totalTime =
+            totalTimeResult?._sum
+                ?.timeSpent || 0
+
         const recentMaterials =
             await prisma.materialProgress.findMany({
-                where: { userId },
+                where: {
+                    userId
+                },
                 include: {
                     material: true
                 },
@@ -118,14 +125,11 @@ const getProfileStats = async (
                 take: 5
             })
 
-        res.json({
+        return res.json({
             completedMaterials,
             totalMaterials,
-            avgScore:
-                Math.round(avgScore),
-            totalTime:
-                totalTime._sum
-                    .timeSpent || 0,
+            avgScore,
+            totalTime,
             recentMaterials
         })
 
@@ -135,7 +139,7 @@ const getProfileStats = async (
             error
         )
 
-        res.status(500).json({
+        return res.status(500).json({
             message:
                 "Ошибка профиля",
             error:
@@ -143,7 +147,6 @@ const getProfileStats = async (
         })
     }
 }
-
 module.exports ={
     markMaterialProgress,
     getProfileStats,
