@@ -1,23 +1,34 @@
 
 
 
-const markMaterialProgress = async (
-    req,
-    res
-) => {
+const markMaterialProgress = async (req, res) => {
     try {
-        const userId = req.user.id
-        const materialId = Number(
-            req.params.id
-        )
+        const userId = Number(req.user?.id)
+        const materialId = Number(req.params.id)
+
+        if (!userId) {
+            return res.status(401).json({
+                message: "Пользователь не найден"
+            })
+        }
+
+        const material = await prisma.material.findUnique({
+            where: {
+                id: materialId
+            }
+        })
+
+        if (!material) {
+            return res.status(404).json({
+                message: "Материал не найден"
+            })
+        }
 
         const existing =
-            await prisma.materialProgress.findUnique({
+            await prisma.materialProgress.findFirst({
                 where: {
-                    userId_materialId: {
-                        userId,
-                        materialId
-                    }
+                    userId,
+                    materialId
                 }
             })
 
@@ -47,8 +58,7 @@ const markMaterialProgress = async (
         res.status(500).json({
             message:
                 "Ошибка сохранения прогресса",
-            error:
-            error.message
+            error: error.message
         })
     }
 }
