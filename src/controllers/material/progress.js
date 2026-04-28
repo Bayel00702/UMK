@@ -39,9 +39,16 @@ const markMaterialProgress = async (
         res.json(progress)
 
     } catch (error) {
+        console.log(
+            "PROGRESS ERROR:",
+            error
+        )
+
         res.status(500).json({
             message:
-                "Ошибка сохранения прогресса"
+                "Ошибка сохранения прогресса",
+            error:
+            error.message
         })
     }
 }
@@ -113,9 +120,16 @@ const getProfileStats = async (
         })
 
     } catch (error) {
+        console.log(
+            "PROFILE ERROR:",
+            error
+        )
+
         res.status(500).json({
             message:
-                "Ошибка профиля"
+                "Ошибка профиля",
+            error:
+            error.message
         })
     }
 }
