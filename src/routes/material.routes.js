@@ -11,6 +11,8 @@ const {
     updateMaterial
 } = require("../controllers/material/material")
 
+const {markMaterialProgress, getProfileStats} = require("../controllers/material/progress")
+
 const authMiddleware = require("../middleware/auth.middleware")
 const roleMiddleware = require("../middleware/role.middleware")
 
@@ -51,6 +53,18 @@ router.put(
     roleMiddleware(["ADMIN"]),
     upload.single("file"),
     updateMaterial
+)
+
+router.post(
+    "/progress/:id",
+    authMiddleware,
+    markMaterialProgress
+)
+
+router.get(
+    "/profile/stats",
+    authMiddleware,
+    getProfileStats
 )
 
 module.exports = router
