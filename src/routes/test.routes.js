@@ -11,6 +11,8 @@ const {
     getUserResults,
     getAnalytics,
     deleteQuestion,
+    getUsersAnalytics,
+    getUserTestHistory
 } = require("../controllers/test/test")
 
 router.post(
@@ -43,6 +45,20 @@ router.get(
     authMiddleware,
     roleMiddleware(["ADMIN"]),
     getAnalytics
+)
+
+router.get(
+    "/analytics/users",
+    authMiddleware,
+    roleMiddleware(["ADMIN"]),
+    getUsersAnalytics
+)
+
+router.get(
+    "/user/:id/results",
+    authMiddleware,
+    roleMiddleware(["ADMIN"]),
+    getUserTestHistory
 )
 
 router.delete(

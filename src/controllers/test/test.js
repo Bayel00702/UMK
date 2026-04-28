@@ -353,6 +353,88 @@ const deleteQuestion = async (req, res) => {
     }
 }
 
+const getUsersAnalytics = async (req, res) => {
+    try {
+        const users = await prisma.user.findMany({
+            where: {
+                NOT: {
+                    role: "ADMIN"
+                }
+            },
+            include: {
+                testResults: true
+            }
+        })
+
+        const formattedUsers = users.map(user => {
+            const totalTests = user.testResults.length
+
+            const avgScore =
+                totalTests > 0
+                    ? user.testResults.reduce(
+                    (sum, test) => sum + test.percent,
+                    0
+                ) / totalTests
+                    : 0
+
+            return {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                testsCompleted: totalTests,
+                averageScore: Math.round(avgScore),
+                materialsViewed: 0,
+                lastActive: user.updatedAt
+            }
+        })
+
+        res.json({
+            users: formattedUsers
+        })
+
+    } catch (error) {
+        console.log(error)
+
+        res.status(500).json({
+            message: "Ошибка пользователей"
+        })
+    }
+}
+
+const getUserTestHistory = async (req, res) => {
+    try {
+        const userId = Number(req.params.id)
+
+        const results =
+            await prisma.testResult.findMany({
+                where: {
+                    userId
+                },
+                orderBy: {
+                    createdAt: "desc"
+                }
+            })
+
+        const formattedResults =
+            results.map(result => ({
+                id: result.id,
+                title: result.testTitle,
+                score: result.score,
+                maxScore: result.total,
+                date: result.createdAt
+            }))
+
+        res.json(formattedResults)
+
+    } catch (error) {
+        console.log(error)
+
+        res.status(500).json({
+            message: "Ошибка истории тестов"
+        })
+    }
+}
+
 
 
 module.exports = {
@@ -362,4 +444,6 @@ module.exports = {
     getUserResults,
     getAnalytics,
     deleteQuestion,
+    getUsersAnalytics,
+    getUserTestHistory
 }
