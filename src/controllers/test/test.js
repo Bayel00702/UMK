@@ -1,4 +1,19 @@
 const prisma = require("../../db/prismaClient")
+const natural = require("natural")
+
+const tokenizer =
+    new natural.WordTokenizer()
+
+const stemmer =
+    natural.PorterStemmerRu
+
+function normalizeWords(text) {
+    return tokenizer
+        .tokenize(text.toLowerCase())
+        .map(word =>
+            stemmer.stem(word)
+        )
+}
 
 
 // ADMIN - создание вопроса
@@ -9,47 +24,71 @@ const createQuestion = async (req, res) => {
             testTitle,
             subjectId,
             testType,
-            answers
+            answers,
+            keywords
         } = req.body
 
         if (
             !text ||
             !testTitle ||
-            !subjectId ||
-            !answers ||
-            answers.length < 2
+            !subjectId
         ) {
             return res.status(400).json({
-                message:
-                    "Заполните все поля"
+                message: "Заполните все поля"
             })
         }
 
-        const hasCorrectAnswer =
-            answers.some(
-                answer =>
-                    answer.isCorrect
-            )
+        if (testType === "TEST") {
 
-        const hasEmptyAnswers =
-            answers.some(
-                answer =>
-                    !answer.text ||
-                    answer.text.trim() === ""
-            )
+            if (
+                !answers ||
+                answers.length < 2
+            ) {
+                return res.status(400).json({
+                    message:
+                        "Минимум 2 варианта ответа"
+                })
+            }
 
-        if (hasEmptyAnswers) {
-            return res.status(400).json({
-                message:
-                    "Все варианты ответа должны быть заполнены"
-            })
+            const hasCorrectAnswer =
+                answers.some(
+                    answer =>
+                        answer.isCorrect
+                )
+
+            const hasEmptyAnswers =
+                answers.some(
+                    answer =>
+                        !answer.text ||
+                        answer.text.trim() === ""
+                )
+
+            if (hasEmptyAnswers) {
+                return res.status(400).json({
+                    message:
+                        "Все варианты ответа должны быть заполнены"
+                })
+            }
+
+            if (!hasCorrectAnswer) {
+                return res.status(400).json({
+                    message:
+                        "Укажите правильный ответ"
+                })
+            }
         }
 
-        if (!hasCorrectAnswer) {
-            return res.status(400).json({
-                message:
-                    "Укажите правильный ответ"
-            })
+        if (testType === "SITUATION") {
+
+            if (
+                !keywords ||
+                keywords.length === 0
+            ) {
+                return res.status(400).json({
+                    message:
+                        "Добавьте ключевые слова"
+                })
+            }
         }
 
         const question =
@@ -59,15 +98,25 @@ const createQuestion = async (req, res) => {
                     testTitle,
                     subjectId: Number(subjectId),
                     testType,
-                    answers: {
-                        create: answers.map(
-                            answer => ({
-                                text: answer.text,
-                                isCorrect: answer.isCorrect
-                            })
-                        )
-                    }
+
+                    keywords:
+                        testType === "SITUATION"
+                            ? keywords
+                            : [],
+
+                    answers:
+                        testType === "TEST"
+                            ? {
+                                create: answers.map(
+                                    answer => ({
+                                        text: answer.text,
+                                        isCorrect: answer.isCorrect
+                                    })
+                                )
+                            }
+                            : undefined
                 },
+
                 include: {
                     answers: true
                 }
@@ -97,24 +146,30 @@ const getQuestionsBySubject =
                 req.params
 
             const questions =
-                await prisma.question.findMany(
-                    {
-                        where: {
-                            subjectId:
-                                Number(
-                                    subjectId
-                                )
-                        },
-                        include: {
-                            answers: {
-                                select: {
-                                    id: true,
-                                    text: true
-                                }
+                await prisma.question.findMany({
+                    where: {
+                        subjectId:
+                            Number(subjectId)
+                    },
+
+                    include: {
+                        answers: {
+                            select: {
+                                id: true,
+                                text: true
                             }
                         }
+                    },
+
+                    select: {
+                        id: true,
+                        text: true,
+                        testTitle: true,
+                        testType: true,
+                        keywords: true,
+                        answers: true
                     }
-                )
+                })
 
             res.json(questions)
 
@@ -163,23 +218,68 @@ const submitTest = async (
         let score = 0
 
         questions.forEach(question => {
-            const correctAnswer =
-                question.answers.find(
-                    answer => answer.isCorrect
-                )
 
-            const userAnswer =
-                answers.find(
-                    item =>
-                        item.questionId === question.id
-                )
+            if (question.testType === "TEST") {
 
-            if (
-                userAnswer &&
-                userAnswer.answerId ===
-                correctAnswer?.id
-            ) {
-                score++
+                const correctAnswer =
+                    question.answers.find(
+                        answer => answer.isCorrect
+                    )
+
+                const userAnswer =
+                    answers.find(
+                        item =>
+                            item.questionId === question.id
+                    )
+
+                if (
+                    userAnswer &&
+                    userAnswer.answerId ===
+                    correctAnswer?.id
+                ) {
+                    score++
+                }
+            }
+
+            if (question.testType === "SITUATION") {
+
+                const userAnswer =
+                    answers.find(
+                        item =>
+                            item.questionId === question.id
+                    )
+
+                if (!userAnswer?.textAnswer) {
+                    return
+                }
+
+                const normalizedAnswer =
+                    normalizeWords(
+                        userAnswer.textAnswer
+                    )
+
+                const matched =
+                    question.keywords.filter(
+                        keyword => {
+
+                            const normalizedKeyword =
+                                stemmer.stem(
+                                    keyword.toLowerCase()
+                                )
+
+                            return normalizedAnswer.includes(
+                                normalizedKeyword
+                            )
+                        }
+                    )
+
+                const percentMatch =
+                    matched.length /
+                    question.keywords.length
+
+                if (percentMatch >= 0.7) {
+                    score++
+                }
             }
         })
 
@@ -210,7 +310,8 @@ const submitTest = async (
                     userId: req.user.sub,
                     subjectId: Number(subjectId),
                     testTitle,
-                    testType: "TEST",
+                    testType:
+                        questions[0]?.testType || "TEST",
                     score,
                     total,
                     percent: Number(percent)

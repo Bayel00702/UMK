@@ -135,6 +135,8 @@ model Question {
 
   answers Answer[]
 
+  keywords String[]
+
   createdAt DateTime @default(now())
 }
 
@@ -165,6 +167,7 @@ model TestResult {
 
   createdAt DateTime @default(now())
 }
+
 model MaterialProgress {
   id Int @id @default(autoincrement())
 
