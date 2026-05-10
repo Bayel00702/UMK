@@ -148,17 +148,7 @@ const getQuestionsBySubject =
             const questions =
                 await prisma.question.findMany({
                     where: {
-                        subjectId:
-                            Number(subjectId)
-                    },
-
-                    include: {
-                        answers: {
-                            select: {
-                                id: true,
-                                text: true
-                            }
-                        }
+                        subjectId: Number(subjectId)
                     },
 
                     select: {
@@ -167,7 +157,14 @@ const getQuestionsBySubject =
                         testTitle: true,
                         testType: true,
                         keywords: true,
-                        answers: true
+
+                        answers: {
+                            select: {
+                                id: true,
+                                text: true,
+                                isCorrect: true
+                            }
+                        }
                     }
                 })
 
