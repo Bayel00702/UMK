@@ -8,6 +8,7 @@ const createQuestion = async (req, res) => {
             text,
             testTitle,
             subjectId,
+            testType,
             answers
         } = req.body
 
@@ -56,15 +57,13 @@ const createQuestion = async (req, res) => {
                 data: {
                     text,
                     testTitle,
-                    subjectId: Number(
-                        subjectId
-                    ),
+                    subjectId: Number(subjectId),
+                    testType,
                     answers: {
                         create: answers.map(
                             answer => ({
                                 text: answer.text,
-                                isCorrect:
-                                answer.isCorrect
+                                isCorrect: answer.isCorrect
                             })
                         )
                     }
@@ -211,6 +210,7 @@ const submitTest = async (
                     userId: req.user.sub,
                     subjectId: Number(subjectId),
                     testTitle,
+                    testType: "TEST",
                     score,
                     total,
                     percent: Number(percent)

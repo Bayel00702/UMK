@@ -12,6 +12,11 @@ enum Role {
   USER
 }
 
+enum TestType {
+  TEST
+  SITUATION
+}
+
 model User {
   id           Int     @id @default(autoincrement())
   email        String  @unique
@@ -121,7 +126,9 @@ model Topic {
 model Question {
   id        Int     @id @default(autoincrement())
   text      String
+
   testTitle String?
+  testType TestType @default(TEST)
 
   subjectId Int
   subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
@@ -149,7 +156,8 @@ model TestResult {
   subjectId Int
   subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
-  testTitle String? // ДОБАВЬ ЭТО
+  testTitle String?
+  testType TestType @default(TEST)
 
   score   Int
   total   Int
@@ -157,7 +165,6 @@ model TestResult {
 
   createdAt DateTime @default(now())
 }
-
 model MaterialProgress {
   id Int @id @default(autoincrement())
 
