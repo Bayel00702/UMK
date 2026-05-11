@@ -156,6 +156,7 @@ const getQuestionsBySubject =
                         text: true,
                         testTitle: true,
                         testType: true,
+                        variant: true,
                         keywords: true,
 
                         answers: {

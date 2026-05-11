@@ -133,6 +133,8 @@ model Question {
   subjectId Int
   subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
+  variant Int?
+
   answers Answer[]
 
   keywords String[]
