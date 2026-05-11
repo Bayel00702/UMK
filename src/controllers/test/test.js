@@ -192,14 +192,21 @@ const submitTest = async (
         const {
             subjectId,
             testTitle,
+            testType,
+            variant,
             answers
         } = req.body
-
         const questions =
             await prisma.question.findMany({
                 where: {
                     subjectId: Number(subjectId),
-                    testTitle: testTitle
+                    testTitle,
+
+                    testType,
+
+                    ...(testType === "TEST"
+                        ? { variant }
+                        : {})
                 },
                 include: {
                     answers: true
