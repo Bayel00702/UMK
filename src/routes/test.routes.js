@@ -12,7 +12,8 @@ const {
     getAnalytics,
     deleteQuestion,
     getUsersAnalytics,
-    getUserTestHistory
+    getUserTestHistory,
+    updateQuestion,
 } = require("../controllers/test/test")
 
 router.post(
@@ -66,6 +67,12 @@ router.delete(
     authMiddleware,
     roleMiddleware(["ADMIN"]),
     deleteQuestion
+)
+
+router.patch(
+    "/question/:id",
+    authMiddleware,
+    updateQuestion
 )
 
 module.exports = router

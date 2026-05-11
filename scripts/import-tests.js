@@ -20,6 +20,9 @@ async function importTests() {
         })
 
     const text = result.value
+    console.log(
+        text.slice(-5000)
+    )
 
     // =========================
     // Берем только тесты
@@ -192,6 +195,114 @@ async function importTests() {
             console.log(
                 `Добавлен [V${variantIndex}]`,
                 createdQuestion.text
+            )
+        }
+    }
+    await prisma.question.deleteMany({
+        where: {
+            testTitle: "Лекция 1",
+            testType: "SITUATION"
+        }
+    })
+
+    // =========================
+// СИТУАЦИОННЫЕ ЗАДАЧИ
+// =========================
+
+    const situationsParts =
+        text.split(
+            "СИТУАЦИОННЫЕ ЗАДАЧИ"
+        )
+
+    const situationsPart =
+        situationsParts[
+        situationsParts.length - 1
+            ]
+    console.log(
+        situationsPart?.slice(0, 3000)
+    )
+
+    if (situationsPart) {
+
+        const situationTitles = [
+            ...situationsPart.matchAll(
+                /ЗАДАЧА\s+\d+\s+([\s\S]*?)(?=ЗАДАЧА\s+\d+|При сушке|Овощи|$)/g
+            )
+        ]
+
+        const situationTexts = [
+            ...situationsPart.matchAll(
+                /(При сушке[\s\S]*?|Овощи[\s\S]*?)(?=При сушке|Овощи|ОТВЕТЫ К СИТУАЦИОННЫМ ЗАДАЧАМ|$)/g
+            )
+        ]
+
+
+        console.log(
+            "Найдено задач:",
+            situationTexts.length
+        )
+
+        for (let i = 0;
+             i < situationTexts.length;
+             i++) {
+
+            const title =
+                situationTitles[i]?.[1]?.trim() ||
+                `Задача ${i + 1}`
+
+            const body =
+                situationTexts[i]?.[1]?.trim()
+
+            const formattedBody =
+                body
+                    ?.replaceAll(
+                        "Вопросы:",
+                        "\n\nВопросы:\n"
+                    )
+                    ?.replaceAll(
+                        "1.",
+                        "\n1."
+                    )
+                    ?.replaceAll(
+                        "2.",
+                        "\n2."
+                    )
+                    ?.replaceAll(
+                        "3.",
+                        "\n3."
+                    )
+
+            const cleanTitle =
+                title.replace(
+                    /^\d+\.\s*/,
+                    ""
+                )
+
+            const situationText =
+                `${i + 1}. ${cleanTitle}
+
+            ${formattedBody}`
+
+            await prisma.question.create({
+                data: {
+
+                    text:
+                    situationText,
+
+                    testTitle:
+                        "Лекция 1",
+
+                    testType:
+                        "SITUATION",
+
+                    subjectId: 1,
+
+                    keywords: []
+                }
+            })
+
+            console.log(
+                "Добавлена задача"
             )
         }
     }

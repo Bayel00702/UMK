@@ -534,7 +534,40 @@ const getUserTestHistory = async (req, res) => {
     }
 }
 
+const updateQuestion =
+    async (req, res) => {
 
+        try {
+
+            const { id } =
+                req.params
+
+            const { keywords } =
+                req.body
+
+            const question =
+                await prisma.question.update({
+                    where: {
+                        id: Number(id)
+                    },
+
+                    data: {
+                        keywords
+                    }
+                })
+
+            res.json(question)
+
+        } catch (err) {
+
+            console.log(err)
+
+            res.status(500).json({
+                message:
+                    "Ошибка обновления"
+            })
+        }
+    }
 
 module.exports = {
     createQuestion,
@@ -544,5 +577,6 @@ module.exports = {
     getAnalytics,
     deleteQuestion,
     getUsersAnalytics,
-    getUserTestHistory
+    getUserTestHistory,
+    updateQuestion
 }
